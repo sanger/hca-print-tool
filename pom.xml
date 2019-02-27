@@ -27,7 +27,7 @@
                     </descriptorRefs>
                     <archive>
                         <manifest>
-                            <mainClass>uk.ac.sanger.labeldesign.Main</mainClass>
+                            <mainClass>uk.ac.sanger.hcaprint.Main</mainClass>
                         </manifest>
                         <manifestEntries>
                             <Permissions>all-permissions</Permissions>
