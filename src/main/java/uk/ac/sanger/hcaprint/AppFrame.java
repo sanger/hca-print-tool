@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 /**
+ * The window and controller for the application.
  * @author dr6
  */
 public class AppFrame extends JFrame {
@@ -21,6 +22,10 @@ public class AppFrame extends JFrame {
     private JButton printButton;
     private Properties config;
 
+    /**
+     * Constructs an AppFrame using the given config.
+     * The config keys should include "printers", "pmb_url" and (optionally) "proxy".
+     */
     public AppFrame(Properties config) {
         super("HCA print tool");
         this.config = config;

@@ -2,15 +2,17 @@ package uk.ac.sanger.hcaprint;
 
 import javax.swing.*;
 import java.net.URL;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.List;
 import java.util.Properties;
 
 /**
+ * Main entry point for the application.
+ * Loads the properties from a file, and launches the {@link AppFrame}.
  * @author dr6
  */
 public class Main {
+    /**
+     * Runs the application.
+     */
     public static void main(String[] args) {
         final Properties props = loadProperties("config.properties");
         if (props==null) {
@@ -31,20 +33,6 @@ public class Main {
                 Properties props = new Properties();
                 props.load(url.openStream());
                 return props;
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        JOptionPane.showMessageDialog(null, "Could not load file", "Error",
-                JOptionPane.ERROR_MESSAGE);
-        return null;
-    }
-
-    private static List<String> loadFileData(String filename) {
-        try {
-            URL url = Main.class.getClassLoader().getResource(filename);
-            if (url!=null) {
-                return Files.readAllLines(Paths.get(url.toURI()));
             }
         } catch (Exception e) {
             e.printStackTrace();

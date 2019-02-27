@@ -4,6 +4,7 @@ import javax.json.*;
 import java.util.List;
 
 /**
+ * A class representing the information sent in a print request.
  * @author dr6
  */
 public class PrintRequest {
@@ -15,11 +16,20 @@ public class PrintRequest {
     private final List<String> values;
     private final String printer;
 
+    /**
+     * Constructs a print request for sending the specified values to the indicated printer.
+     * @param values the values to send
+     * @param printer the name of the printer
+     */
     public PrintRequest(List<String> values, String printer) {
         this.values = values;
         this.printer = printer;
     }
 
+    /**
+     * Gets the data for the print request, built into a representation of a JSON object.
+     * @return a representation of a JSON object
+     */
     public JsonValue getJsonValue() {
         JsonArrayBuilder labels = createArrayBuilder();
         for (String value : this.values) {
@@ -50,6 +60,9 @@ public class PrintRequest {
         return builderFactory.createArrayBuilder();
     }
 
+    /**
+     * The data for the request, serialised as JSON.
+     */
     @Override
     public String toString() {
         return getJsonValue().toString();

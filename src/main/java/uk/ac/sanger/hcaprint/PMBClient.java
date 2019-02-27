@@ -4,12 +4,18 @@ import java.io.*;
 import java.net.*;
 
 /**
+ * A tool for sending print requests to PrintMyBarcode.
  * @author dr6
  */
 public class PMBClient {
     private String location;
     private Proxy proxy;
 
+    /**
+     * Constructs a client for sending print requests to the given location.
+     * @param location the location where PMB will receive print requests
+     * @param proxyString optional proxy string in format {@code "location:port"}
+     */
     public PMBClient(String location, String proxyString) {
         this.location = location;
         this.proxy = getProxy(proxyString);
@@ -39,6 +45,11 @@ public class PMBClient {
         return new Proxy(Proxy.Type.HTTP, new InetSocketAddress(proxyString.substring(0, c), port));
     }
 
+    /**
+     * Sends a print request
+     * @param request the print request to send
+     * @exception IOException there was a problem sending the print request
+     */
     public void print(PrintRequest request) throws IOException {
         HttpURLConnection connection = openConnection();
         try {
