@@ -151,10 +151,20 @@ public class AppFrame extends JFrame {
 
     private void performPrint() {
         printButton.setEnabled(false);
-        String location = config.getProperty("pmb_url");
+        String location = config.getProperty("pmb_url", "").trim();
         String proxy = config.getProperty("proxy");
-        if (location==null) {
+        String templateString = config.getProperty("template_id", "").trim();
+        String fieldName = config.getProperty("field_name", "").trim();
+        if (location.isEmpty() || templateString.isEmpty() || fieldName.isEmpty()) {
             showError("Missing config for PrintMyBarcode location.");
+            return;
+        }
+
+        int templateId;
+        try {
+            templateId = Integer.parseInt(templateString);
+        } catch (NumberFormatException e) {
+            showError("Invalid template id: "+templateString);
             return;
         }
 
@@ -164,7 +174,7 @@ public class AppFrame extends JFrame {
             return;
         }
 
-        PrintRequest request = new PrintRequest(values, (String) printerCombo.getSelectedItem());
+        PrintRequest request = new PrintRequest(values, (String) printerCombo.getSelectedItem(), templateId, fieldName);
 
         PMBClient pmb = new PMBClient(location, proxy);
 

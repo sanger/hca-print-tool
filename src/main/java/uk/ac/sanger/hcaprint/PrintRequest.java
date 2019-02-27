@@ -8,11 +8,10 @@ import java.util.List;
  * @author dr6
  */
 public class PrintRequest {
-    private static final int LABEL_TEMPLATE_ID = 203;
-    private static final String FIELD_NAME = "contents";
-
     private final JsonBuilderFactory builderFactory = Json.createBuilderFactory(null);
 
+    private int templateId;
+    private String fieldName;
     private final List<String> values;
     private final String printer;
 
@@ -20,10 +19,14 @@ public class PrintRequest {
      * Constructs a print request for sending the specified values to the indicated printer.
      * @param values the values to send
      * @param printer the name of the printer
+     * @param templateId the template id to include in the print request
+     * @param fieldName the name of the field to supply in the label data
      */
-    public PrintRequest(List<String> values, String printer) {
+    public PrintRequest(List<String> values, String printer, int templateId, String fieldName) {
         this.values = values;
         this.printer = printer;
+        this.templateId = templateId;
+        this.fieldName = fieldName;
     }
 
     /**
@@ -38,7 +41,7 @@ public class PrintRequest {
 
         JsonObjectBuilder attributes = createObjectBuilder();
         attributes.add("printer_name", this.printer);
-        attributes.add("label_template_id", LABEL_TEMPLATE_ID);
+        attributes.add("label_template_id", templateId);
         attributes.add("labels", createObjectBuilder().add("body", labels));
 
         return createObjectBuilder()
@@ -48,7 +51,7 @@ public class PrintRequest {
 
     private JsonValue labelData(String value) {
         return createObjectBuilder()
-                .add("label", createObjectBuilder().add(FIELD_NAME, value))
+                .add("label", createObjectBuilder().add(fieldName, value))
                 .build();
     }
 

@@ -18,6 +18,14 @@ public class Main {
         if (props==null) {
             return;
         }
+        for (String arg : args) {
+            int c = arg.indexOf('=');
+            if (c > 0) {
+                String key = arg.substring(0, c).trim();
+                String value = arg.substring(c+1).trim();
+                props.put(key, value);
+            }
+        }
         SwingUtilities.invokeLater(() -> {
             AppFrame frame = new AppFrame(props);
             frame.setBounds(100, 100, 500, 500);
