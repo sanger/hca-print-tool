@@ -43,6 +43,7 @@ public class AppFrame extends JFrame {
         lastIndexField = setupSpinner(1, 1, 1);
         printButton = new JButton("Print");
         printButton.addActionListener(e -> performPrint());
+        printButton.setEnabled(false);
         pasteButton = new JButton("Paste");
         pasteButton.addActionListener(e -> performPaste());
 
