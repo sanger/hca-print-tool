@@ -9,6 +9,10 @@ import java.util.function.Function;
  * @author dr6
  */
 public class PrintRequest {
+    /**
+     * Fields included on the label.
+     * Each field provides a {@link #propertyName} and a way of getting a value from an instance of {@link LabelData}.
+     */
     public enum Field implements Function<LabelData, String> {
         NAME(LabelData::getName),
         BARCODE(LabelData::getBarcode),
@@ -21,10 +25,21 @@ public class PrintRequest {
             this.function = function;
         }
 
+        /**
+         * Gets the property name for this field.
+         * The property name should be associated with a string (the field name) in the application's config.
+         * The field name is the key used in the JSON property representing this field in the print request.
+         * @return the property name for this field
+         */
         public String propertyName() {
             return "field_"+this.name().toLowerCase();
         }
 
+        /**
+         * Gets the value for this field from the given {@code LabelData} instance
+         * @param labelData the instance to extract the field value from
+         * @return the extracted field value
+         */
         @Override
         public String apply(LabelData labelData) {
             return this.function.apply(labelData);
@@ -78,6 +93,12 @@ public class PrintRequest {
                 .build();
     }
 
+    /**
+     * Gets a JSON value representing the fields for a single label.
+     * This is incorporated into the {@link #getJsonValue combined JSON value object} for the whole request.
+     * @param data the data for a single label
+     * @return a JSON value object
+     */
     private JsonValue labelData(LabelData data) {
         JsonObjectBuilder fieldData = createObjectBuilder();
         for (Map.Entry<Field, String> entry : fieldNames.entrySet()) {
@@ -95,10 +116,16 @@ public class PrintRequest {
                 .build();
     }
 
+    /**
+     * Gets a new JSON object builder from the builder factory.
+     */
     private JsonObjectBuilder createObjectBuilder() {
         return builderFactory.createObjectBuilder();
     }
 
+    /**
+     * Gets a new JSON array builder from the builder factory.
+     */
     private JsonArrayBuilder createArrayBuilder() {
         return builderFactory.createArrayBuilder();
     }

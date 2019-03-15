@@ -21,6 +21,15 @@ public class PMBClient {
         this.proxy = getProxy(proxyString);
     }
 
+    /**
+     * Gets a {@code Proxy} object based on the given string.
+     * If the string is null or has no content, null is returned.
+     * If given, the string should be of the form {@code "location:port"}.
+     * If it cannot be understood, a message will be output to {@code System.err},
+     * and then null will be returned.
+     * @param proxyString the string describing the proxy, or null (or a blank string) if no proxy is required
+     * @return a proxy, or null
+     */
     private static Proxy getProxy(String proxyString) {
         if (proxyString==null) {
             return null;
@@ -59,6 +68,13 @@ public class PMBClient {
         }
     }
 
+    /**
+     * Post the given request over the given connection.
+     * @param request the request to send
+     * @param connection an open connection
+     * @exception IOException there was a problem sending the print request, or if
+     *            the response code was not in the 2## range.
+     */
     private void post(PrintRequest request, HttpURLConnection connection) throws IOException {
         connection.setRequestMethod("POST");
         connection.setDoOutput(true);
@@ -99,6 +115,12 @@ public class PMBClient {
         }
     }
 
+    /**
+     * Opens a new connection from the url specified by this instance's location string.
+     * If a proxy was specified, it will be included in the connection.
+     * @return an open {@code HttpURLConnection}.
+     * @exception IOException there was a problem opening the connection
+     */
     private HttpURLConnection openConnection() throws IOException {
         URL url = new URL(this.location);
         URLConnection con;

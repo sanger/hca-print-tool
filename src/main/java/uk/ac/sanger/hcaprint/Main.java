@@ -34,6 +34,12 @@ public class Main {
         });
     }
 
+    /**
+     * Loads a properties file from the named resource.
+     * If the file cannot be read, an error message will be shown, and the method will return null.
+     * @param filename filename to load
+     * @return the properties loaded, or null if there was an error
+     */
     private static Properties loadProperties(String filename) {
         try {
             URL url = Main.class.getClassLoader().getResource(filename);

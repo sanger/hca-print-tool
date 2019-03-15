@@ -9,7 +9,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 /**
- * The window and controller for the application.
+ * The window and controller for the HCA label printing application.
  * @author dr6
  */
 public class AppFrame extends JFrame {
@@ -34,6 +34,9 @@ public class AppFrame extends JFrame {
         layOutComponents();
     }
 
+    /**
+     * Creates the graphical components used in the frame.
+     */
     private void initComponents() {
         tableModel = new FunctionalTableModel<>(null, LabelData::getName, LabelData::getDate);
         tableModel.setIndexColumn(0);
@@ -57,6 +60,9 @@ public class AppFrame extends JFrame {
         printerCombo.setEditable(false);
     }
 
+    /**
+     * Lays out the components in panels and adds them to the frame.
+     */
     private void layOutComponents() {
         Box printerPanel = Box.createHorizontalBox();
         printerPanel.add(Box.createHorizontalGlue());
@@ -102,6 +108,12 @@ public class AppFrame extends JFrame {
         setContentPane(cp);
     }
 
+    /**
+     * Creates a table, sets it up suitably and returns it.
+     * Setting up includes adjusting column sizes and viewport behaviour.
+     * @param tableModel the model for the table
+     * @return the new table
+     */
     private JTable setUpTable(TableModel tableModel) {
         JTable table = new JTable(tableModel);
         table.setCellSelectionEnabled(false);
@@ -118,6 +130,15 @@ public class AppFrame extends JFrame {
         return table;
     }
 
+    /**
+     * Creates a int spinner and returns it.
+     * Setting up includes adding {@link #rangeChanged} as a ChangeListener, and adjusting the
+     * size of the spinner component.
+     * @param value the initial value of the spinner
+     * @param min the minimum value of the spinner
+     * @param max the maximum value of the spinner
+     * @return the new spinner
+     */
     private JSpinner setUpSpinner(int value, int min, int max) {
         JSpinner spinner = new JSpinner(new SpinnerNumberModel(value, min, max, 1));
         JComponent editor = spinner.getEditor();
@@ -129,16 +150,32 @@ public class AppFrame extends JFrame {
         return spinner;
     }
 
+    /**
+     * Are we ready to print?
+     * We are ready to print if the table has rows, and the min and max spinners specify a
+     * nonempty range of rows.
+     * @return true if we're ready to print, otherwise false
+     */
     private boolean canPrint() {
         Integer min = (Integer) firstIndexField.getValue();
         Integer max = (Integer) lastIndexField.getValue();
         return (min!=null && max!=null && min <= max && min > 0 && max <= tableModel.getRowCount());
     }
 
+    /**
+     * This is triggered when the spinners are adjusted.
+     * It enables or disables the print button, according to {@link #canPrint}.
+     */
     private void rangeChanged() {
         printButton.setEnabled(canPrint());
     }
 
+    /**
+     * The behaviour of the paste button.
+     * Tries to read the clipbaord. Tries to convert it to a list of label data,
+     * and to put that in the table.
+     * If reading the clipboard fails, an error will be shown to the user.
+     */
     private void performPaste() {
         String data;
         try {
@@ -157,6 +194,12 @@ public class AppFrame extends JFrame {
         updateSpinnerMax(lastIndexField, rows.size());
     }
 
+    /**
+     * Adjusts the max value of the given int spinner.
+     * If the new max is below the spinner's current value, the value is brought down.
+     * @param spinner an int spinner
+     * @param max the new max value for the spinner
+     */
     private void updateSpinnerMax(JSpinner spinner, int max) {
         SpinnerNumberModel model = (SpinnerNumberModel) spinner.getModel();
         model.setMaximum(max);
@@ -165,6 +208,12 @@ public class AppFrame extends JFrame {
         }
     }
 
+    /**
+     * Gets the labeldata for printing.
+     * This is a range of rows from the table. The range is determined by the values in the range spinners.
+     * If the range is empty or invalid, an empty list will be returned.
+     * @return a list of labeldata for printing
+     */
     private List<LabelData> getValuesToPrint() {
         Integer min = (Integer) firstIndexField.getValue();
         Integer max = (Integer) lastIndexField.getValue();
@@ -176,6 +225,14 @@ public class AppFrame extends JFrame {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * The behaviour of the print button.
+     * This reads some values from the application's config, creates a
+     * {@link PrintRequest} and posts it using {@link PMBClient}.
+     * In the event of an error (missing/invalid config, failed post request),
+     * an error message will be shown to the user.
+     * If the post succeeds, a success message will be shown.
+     */
     private void performPrint() {
         printButton.setEnabled(false);
         String location = config.getProperty("pmb_url", "").trim();
@@ -214,6 +271,10 @@ public class AppFrame extends JFrame {
         JOptionPane.showMessageDialog(this, "Request sent.");
     }
 
+    /**
+     * Shows an error message to the user using {@link JOptionPane}.
+     * @param message the message to display
+     */
     private void showError(String message) {
         JOptionPane.showMessageDialog(this, message, "Error",
                 JOptionPane.ERROR_MESSAGE);
