@@ -14,7 +14,7 @@ import java.util.stream.IntStream;
  */
 public class AppFrame extends JFrame {
     private JTable table;
-    private SimpleTableModel tableModel;
+    private FunctionalTableModel<LabelData> tableModel;
     private JScrollPane scrollPane;
     private JSpinner firstIndexField, lastIndexField;
     private JButton pasteButton;
@@ -35,12 +35,14 @@ public class AppFrame extends JFrame {
     }
 
     private void initComponents() {
-        tableModel = new SimpleTableModel();
-        table = setupTable(tableModel);
+        tableModel = new FunctionalTableModel<>(null, LabelData::getName, LabelData::getDate);
+        tableModel.setIndexColumn(0);
+        tableModel.setHeadings("#", "Name/Barcode", "Date");
+        table = setUpTable(tableModel);
         scrollPane = new JScrollPane(table);
 
-        firstIndexField = setupSpinner(1, 1, 1);
-        lastIndexField = setupSpinner(1, 1, 1);
+        firstIndexField = setUpSpinner(1, 1, 1);
+        lastIndexField = setUpSpinner(1, 1, 1);
         printButton = new JButton("Print");
         printButton.addActionListener(e -> performPrint());
         printButton.setEnabled(false);
@@ -56,22 +58,43 @@ public class AppFrame extends JFrame {
     }
 
     private void layOutComponents() {
-        JPanel printerPanel = new JPanel();
-        printerPanel.add(new JLabel("Set label texts from clipboard:"));
+        Box printerPanel = Box.createHorizontalBox();
+        printerPanel.add(Box.createHorizontalGlue());
         printerPanel.add(pasteButton);
+        printerPanel.add(Box.createHorizontalStrut(20));
         printerPanel.add(new JLabel("Printer:"));
         printerPanel.add(printerCombo);
+        printerPanel.add(Box.createHorizontalGlue());
 
-        JPanel printPanel = new JPanel();
+        Box printPanel = Box.createHorizontalBox();
+        printPanel.add(Box.createHorizontalGlue());
         printPanel.add(new JLabel("Print range:"));
+        printPanel.add(Box.createHorizontalStrut(5));
         printPanel.add(firstIndexField);
+        printPanel.add(Box.createHorizontalStrut(5));
         printPanel.add(new JLabel("to"));
+        printPanel.add(Box.createHorizontalStrut(5));
         printPanel.add(lastIndexField);
+        printPanel.add(Box.createHorizontalStrut(20));
         printPanel.add(printButton);
+        printPanel.add(Box.createHorizontalGlue());
+
+        String explanation = "<html>You can paste two columns from a spreadsheet."
+                +"<br>The left column should be the name/barcode."
+                +"<br>The right column should be the date."
+                +"</html>";
+
+        JPanel explainPanel = new JPanel();
+        explainPanel.add(new JLabel(explanation));
 
         Box bottomPanel = Box.createVerticalBox();
+        bottomPanel.add(Box.createVerticalStrut(5));
+        bottomPanel.add(explainPanel);
+        bottomPanel.add(Box.createVerticalStrut(5));
         bottomPanel.add(printerPanel);
+        bottomPanel.add(Box.createVerticalStrut(5));
         bottomPanel.add(printPanel);
+        bottomPanel.add(Box.createVerticalStrut(10));
 
         JPanel cp = new JPanel(new BorderLayout());
         cp.add(scrollPane, BorderLayout.CENTER);
@@ -79,7 +102,7 @@ public class AppFrame extends JFrame {
         setContentPane(cp);
     }
 
-    private JTable setupTable(TableModel tableModel) {
+    private JTable setUpTable(TableModel tableModel) {
         JTable table = new JTable(tableModel);
         table.setCellSelectionEnabled(false);
         TableColumnModel columnModel = table.getColumnModel();
@@ -88,18 +111,21 @@ public class AppFrame extends JFrame {
         int columnWidth = comp.getPreferredSize().width + 10;
         columnModel.setColumnMargin(10);
         columnModel.getColumn(0).setPreferredWidth(columnWidth);
+        columnModel.getColumn(0).setMinWidth(columnWidth);
         columnModel.getColumn(1).setPreferredWidth(400);
+        columnModel.getColumn(2).setPreferredWidth(400);
         table.setFillsViewportHeight(true);
         return table;
     }
 
-    private JSpinner setupSpinner(int value, int min, int max) {
+    private JSpinner setUpSpinner(int value, int min, int max) {
         JSpinner spinner = new JSpinner(new SpinnerNumberModel(value, min, max, 1));
         JComponent editor = spinner.getEditor();
         if (editor instanceof JSpinner.DefaultEditor) {
             ((JSpinner.DefaultEditor) editor).getTextField().setColumns(4);
         }
         spinner.addChangeListener(e -> rangeChanged());
+        spinner.setMaximumSize(spinner.getPreferredSize());
         return spinner;
     }
 
@@ -122,13 +148,13 @@ public class AppFrame extends JFrame {
             showError("The clipboard could not be read.");
             return;
         }
-        List<String> lines = Arrays.stream(data.split("\\n"))
-                .map(String::trim)
-                .filter(s -> !s.isEmpty())
+        List<LabelData> rows = Arrays.stream(data.split("\n"))
+                .map(LabelData::fromLine)
+                .filter(Objects::nonNull)
                 .collect(Collectors.toList());
-        tableModel.setItems(lines);
-        updateSpinnerMax(firstIndexField, lines.size());
-        updateSpinnerMax(lastIndexField, lines.size());
+        tableModel.setItems(rows);
+        updateSpinnerMax(firstIndexField, rows.size());
+        updateSpinnerMax(lastIndexField, rows.size());
     }
 
     private void updateSpinnerMax(JSpinner spinner, int max) {
@@ -139,14 +165,14 @@ public class AppFrame extends JFrame {
         }
     }
 
-    private List<String> getValuesToPrint() {
+    private List<LabelData> getValuesToPrint() {
         Integer min = (Integer) firstIndexField.getValue();
         Integer max = (Integer) lastIndexField.getValue();
         if (min==null || max==null || min > max || min < 0 || max > tableModel.getRowCount()) {
             return Collections.emptyList();
         }
         return IntStream.range(min-1, max)
-                .mapToObj(tableModel::getItem)
+                .mapToObj(tableModel::getRow)
                 .collect(Collectors.toList());
     }
 
@@ -155,8 +181,7 @@ public class AppFrame extends JFrame {
         String location = config.getProperty("pmb_url", "").trim();
         String proxy = config.getProperty("proxy");
         String templateString = config.getProperty("template_id", "").trim();
-        String fieldName = config.getProperty("field_name", "").trim();
-        if (location.isEmpty() || templateString.isEmpty() || fieldName.isEmpty()) {
+        if (location.isEmpty() || templateString.isEmpty()) {
             showError("Missing config for PrintMyBarcode location.");
             return;
         }
@@ -169,13 +194,13 @@ public class AppFrame extends JFrame {
             return;
         }
 
-        List<String> values = getValuesToPrint();
+        List<LabelData> values = getValuesToPrint();
         if (values.isEmpty()) {
             showError("Nothing to print.");
             return;
         }
 
-        PrintRequest request = new PrintRequest(values, (String) printerCombo.getSelectedItem(), templateId, fieldName);
+        PrintRequest request = new PrintRequest(values, (String) printerCombo.getSelectedItem(), templateId, config);
 
         PMBClient pmb = new PMBClient(location, proxy);
 

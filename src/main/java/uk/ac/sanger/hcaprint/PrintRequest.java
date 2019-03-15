@@ -1,18 +1,41 @@
 package uk.ac.sanger.hcaprint;
 
 import javax.json.*;
-import java.util.List;
+import java.util.*;
+import java.util.function.Function;
 
 /**
  * A class representing the information sent in a print request.
  * @author dr6
  */
 public class PrintRequest {
+    public enum Field implements Function<LabelData, String> {
+        NAME(LabelData::getName),
+        BARCODE(LabelData::getBarcode),
+        DATE(LabelData::getDate),
+        ;
+
+        private final Function<LabelData, String> function;
+
+        Field(Function<LabelData, String> function) {
+            this.function = function;
+        }
+
+        public String propertyName() {
+            return "field_"+this.name().toLowerCase();
+        }
+
+        @Override
+        public String apply(LabelData labelData) {
+            return this.function.apply(labelData);
+        }
+    }
+
     private final JsonBuilderFactory builderFactory = Json.createBuilderFactory(null);
 
     private int templateId;
-    private String fieldName;
-    private final List<String> values;
+    private Map<Field, String> fieldNames;
+    private final List<LabelData> values;
     private final String printer;
 
     /**
@@ -20,13 +43,19 @@ public class PrintRequest {
      * @param values the values to send
      * @param printer the name of the printer
      * @param templateId the template id to include in the print request
-     * @param fieldName the name of the field to supply in the label data
+     * @param fieldProps properties containing the names of the fields to supply in the label data
      */
-    public PrintRequest(List<String> values, String printer, int templateId, String fieldName) {
+    public PrintRequest(List<LabelData> values, String printer, int templateId, Properties fieldProps) {
         this.values = values;
         this.printer = printer;
         this.templateId = templateId;
-        this.fieldName = fieldName;
+        this.fieldNames = new EnumMap<>(Field.class);
+        for (Field field : Field.values()) {
+            String value = fieldProps.getProperty(field.propertyName(), "").trim();
+            if (!value.isEmpty()) {
+                this.fieldNames.put(field, value);
+            }
+        }
     }
 
     /**
@@ -35,8 +64,8 @@ public class PrintRequest {
      */
     public JsonValue getJsonValue() {
         JsonArrayBuilder labels = createArrayBuilder();
-        for (String value : this.values) {
-            labels.add(labelData(value));
+        for (LabelData data : this.values) {
+            labels.add(labelData(data));
         }
 
         JsonObjectBuilder attributes = createObjectBuilder();
@@ -49,9 +78,20 @@ public class PrintRequest {
                 .build();
     }
 
-    private JsonValue labelData(String value) {
+    private JsonValue labelData(LabelData data) {
+        JsonObjectBuilder fieldData = createObjectBuilder();
+        for (Map.Entry<Field, String> entry : fieldNames.entrySet()) {
+            Field field = entry.getKey();
+            String fieldName = entry.getValue();
+            if (fieldName!=null) {
+                String fieldValue = field.apply(data);
+                if (fieldValue!=null) {
+                    fieldData.add(fieldName, field.apply(data));
+                }
+            }
+        }
         return createObjectBuilder()
-                .add("label", createObjectBuilder().add(fieldName, value))
+                .add("label", fieldData)
                 .build();
     }
 
