@@ -1,10 +1,13 @@
 package uk.ac.sanger.hcaprint;
 
+import uk.ac.sanger.hcaprint.PrintRequest.Field;
+
 import javax.swing.*;
 import javax.swing.table.*;
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -38,9 +41,8 @@ public class AppFrame extends JFrame {
      * Creates the graphical components used in the frame.
      */
     private void initComponents() {
-        tableModel = new FunctionalTableModel<>(null, LabelData::getName, LabelData::getDate);
-        tableModel.setIndexColumn(0);
-        tableModel.setHeadings("#", "Name/Barcode", "Date");
+        Set<Field> enabledFields = findEnabledFields();
+        tableModel = createTableModel(enabledFields);
         table = setUpTable(tableModel);
         scrollPane = new JScrollPane(table);
 
@@ -85,13 +87,8 @@ public class AppFrame extends JFrame {
         printPanel.add(printButton);
         printPanel.add(Box.createHorizontalGlue());
 
-        String explanation = "<html>You can paste two columns from a spreadsheet."
-                +"<br>The left column should be the name/barcode."
-                +"<br>The right column should be the date."
-                +"</html>";
-
         JPanel explainPanel = new JPanel();
-        explainPanel.add(new JLabel(explanation));
+        explainPanel.add(new JLabel(getExplanation()));
 
         Box bottomPanel = Box.createVerticalBox();
         bottomPanel.add(Box.createVerticalStrut(5));
@@ -107,6 +104,65 @@ public class AppFrame extends JFrame {
         cp.add(bottomPanel, BorderLayout.SOUTH);
         setContentPane(cp);
     }
+
+    private String getExplanation() {
+        switch (tableModel.getColumnCount()) {
+            case 0: case 1:
+                return "";
+            case 2:
+                return "You can paste a column from a spreadsheet.";
+            case 3:
+                return "<html>You can paste two columns from a spreadsheet."
+                        +"<br>The left column should be the name/barcode."
+                        +"<br>The right column should be the date."
+                        +"</html>";
+            default:
+                return "You can paste columns from a spreadsheet.";
+        }
+    }
+
+    private Set<Field> findEnabledFields() {
+        Set<Field> fields = EnumSet.noneOf(Field.class);
+        for (Field field : Field.values()) {
+            if (!config.getProperty(field.propertyName(), "").trim().isEmpty()) {
+                fields.add(field);
+            }
+        }
+        return fields;
+    }
+
+    private FunctionalTableModel<LabelData> createTableModel(Set<Field> enabledFields) {
+        int numColumns = 1 + ((enabledFields.contains(Field.BARCODE) || enabledFields.contains(Field.NAME)) ? 1 : 0)
+                + (enabledFields.contains(Field.DATE) ? 1 : 0);
+        @SuppressWarnings("unchecked")
+        Function<LabelData, String>[] columnFunctions = new Function[numColumns];
+        String[] headings = new String[numColumns];
+        headings[0] = "#";
+        int index = 1;
+        if (enabledFields.contains(Field.BARCODE) && enabledFields.contains(Field.NAME)) {
+            columnFunctions[index] = LabelData::getName;
+            headings[index] = "Name/Barcode";
+            ++index;
+        } else if (enabledFields.contains(Field.BARCODE)) {
+            columnFunctions[index] = LabelData::getBarcode;
+            headings[index] = "Barcode";
+            ++index;
+        } else if (enabledFields.contains(Field.NAME)) {
+            columnFunctions[index] = LabelData::getName;
+            headings[index] = "Name";
+            ++index;
+        }
+        if (enabledFields.contains(Field.DATE)) {
+            columnFunctions[index] = LabelData::getDate;
+            headings[index] = "Date";
+            ++index;
+        }
+        FunctionalTableModel<LabelData> model = new FunctionalTableModel<>(columnFunctions);
+        model.setIndexColumn(0);
+        model.setHeadings(headings);
+        return model;
+    }
+
 
     /**
      * Creates a table, sets it up suitably and returns it.
@@ -124,8 +180,10 @@ public class AppFrame extends JFrame {
         columnModel.setColumnMargin(10);
         columnModel.getColumn(0).setPreferredWidth(columnWidth);
         columnModel.getColumn(0).setMinWidth(columnWidth);
-        columnModel.getColumn(1).setPreferredWidth(400);
-        columnModel.getColumn(2).setPreferredWidth(400);
+        int columnCount = tableModel.getColumnCount();
+        for (int col = 1; col < columnCount; ++col) {
+            columnModel.getColumn(col).setPreferredWidth(800/(columnCount-1));
+        }
         table.setFillsViewportHeight(true);
         return table;
     }
