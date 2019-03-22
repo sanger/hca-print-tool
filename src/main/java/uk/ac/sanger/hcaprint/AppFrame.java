@@ -30,7 +30,7 @@ public class AppFrame extends JFrame {
      * The config keys should include "printers", "pmb_url" and (optionally) "proxy".
      */
     public AppFrame(Properties config) {
-        super("HCA print tool");
+        super(config.getProperty("app_title", "Print tool"));
         this.config = config;
 
         initComponents();
