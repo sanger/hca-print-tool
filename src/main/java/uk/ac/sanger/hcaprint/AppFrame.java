@@ -8,8 +8,7 @@ import java.awt.BorderLayout;
 import java.awt.Component;
 import java.util.*;
 import java.util.function.Function;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
+import java.util.stream.*;
 
 /**
  * The window and controller for the HCA label printing application.
@@ -113,9 +112,9 @@ public class AppFrame extends JFrame {
                 return "You can paste a column from a spreadsheet.";
             case 3:
                 return "<html>You can paste two columns from a spreadsheet."
-                        +"<br>The left column should be the name/barcode."
-                        +"<br>The right column should be the date."
-                        +"</html>";
+                        + "<br>The left column should be the name/barcode."
+                        + "<br>The right column should be the date."
+                        + "</html>";
             default:
                 return "You can paste columns from a spreadsheet.";
         }
@@ -182,7 +181,7 @@ public class AppFrame extends JFrame {
         columnModel.getColumn(0).setMinWidth(columnWidth);
         int columnCount = tableModel.getColumnCount();
         for (int col = 1; col < columnCount; ++col) {
-            columnModel.getColumn(col).setPreferredWidth(800/(columnCount-1));
+            columnModel.getColumn(col).setPreferredWidth(800 / (columnCount - 1));
         }
         table.setFillsViewportHeight(true);
         return table;
@@ -217,7 +216,7 @@ public class AppFrame extends JFrame {
     private boolean canPrint() {
         Integer min = (Integer) firstIndexField.getValue();
         Integer max = (Integer) lastIndexField.getValue();
-        return (min!=null && max!=null && min <= max && min > 0 && max <= tableModel.getRowCount());
+        return (min != null && max != null && min <= max && min > 0 && max <= tableModel.getRowCount());
     }
 
     /**
@@ -226,6 +225,16 @@ public class AppFrame extends JFrame {
      */
     private void rangeChanged() {
         printButton.setEnabled(canPrint());
+    }
+
+    /**
+     * Is a warm-up label enabled?
+     * Checks config for the property "warm_up".
+     * Defaults to false.
+     * @return true if warm-up is enabled, otherwise false
+     */
+    private boolean isWarmUpEnabled() {
+        return Boolean.parseBoolean(config.getProperty("warm_up"));
     }
 
     /**
@@ -278,9 +287,11 @@ public class AppFrame extends JFrame {
         if (min==null || max==null || min > max || min < 0 || max > tableModel.getRowCount()) {
             return Collections.emptyList();
         }
-        return IntStream.range(min-1, max)
-                .mapToObj(tableModel::getRow)
-                .collect(Collectors.toList());
+        Stream<LabelData> labelStream = IntStream.range(min-1, max).mapToObj(tableModel::getRow);
+        if (isWarmUpEnabled()) {
+            labelStream = Stream.concat(Stream.of(LabelData.warmUp()), labelStream);
+        }
+        return labelStream.collect(Collectors.toList());
     }
 
     /**

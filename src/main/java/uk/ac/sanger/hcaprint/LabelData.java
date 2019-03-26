@@ -1,5 +1,6 @@
 package uk.ac.sanger.hcaprint;
 
+import java.time.LocalDate;
 import java.util.Arrays;
 
 /**
@@ -104,5 +105,9 @@ public class LabelData {
             return new LabelData(nonEmptyParts[0], nonEmptyParts[1]);
         }
         return null;
+    }
+
+    public static LabelData warmUp() {
+        return new LabelData("Print-tool", LocalDate.now().toString());
     }
 }
