@@ -259,6 +259,7 @@ public class AppFrame extends JFrame {
         tableModel.setItems(rows);
         updateSpinnerMax(firstIndexField, rows.size());
         updateSpinnerMax(lastIndexField, rows.size());
+        rangeChanged();
     }
 
     /**
