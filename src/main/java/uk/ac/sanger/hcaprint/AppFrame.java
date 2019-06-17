@@ -34,6 +34,7 @@ public class AppFrame extends JFrame {
 
         initComponents();
         layOutComponents();
+        setUpMenuBar();
     }
 
     /**
@@ -59,6 +60,13 @@ public class AppFrame extends JFrame {
                 .toArray(String[]::new);
         printerCombo = new JComboBox<>(printers);
         printerCombo.setEditable(false);
+    }
+
+    private void setUpMenuBar() {
+        JMenuBar menuBar = new JMenuBar();
+        JMenu helpMenu = menuBar.add(new JMenu("Help"));
+        helpMenu.add("View config").addActionListener(e -> viewConfig());
+        setJMenuBar(menuBar);
     }
 
     /**
@@ -102,6 +110,11 @@ public class AppFrame extends JFrame {
         cp.add(scrollPane, BorderLayout.CENTER);
         cp.add(bottomPanel, BorderLayout.SOUTH);
         setContentPane(cp);
+    }
+
+    private void viewConfig() {
+        ConfigPanel configPanel = new ConfigPanel(this.config);
+        configPanel.showDialog(this);
     }
 
     private String getExplanation() {

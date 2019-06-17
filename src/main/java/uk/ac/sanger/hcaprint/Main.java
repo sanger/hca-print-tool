@@ -26,6 +26,8 @@ public class Main {
                 props.put(key, value);
             }
         }
+        System.setProperty("apple.laf.useScreenMenuBar", "true");
+        System.setProperty("apple.awt.application.name", props.getProperty("app_title", "HCA Print Tool"));
         SwingUtilities.invokeLater(() -> {
             AppFrame frame = new AppFrame(props);
             frame.setBounds(100, 100, 500, 500);
