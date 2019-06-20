@@ -48,9 +48,6 @@ public class ConfigPanel extends JPanel {
             }
             width += 5;
             columnModel.getColumn(columnIndex).setPreferredWidth(width);
-            if (columnIndex==0) {
-                columnModel.getColumn(columnIndex).setMinWidth(width);
-            }
         }
     }
 
