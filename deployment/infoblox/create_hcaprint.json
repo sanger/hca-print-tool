@@ -1,0 +1,8 @@
+{
+  "method": "POST",
+  "object": "record:a",
+  "data": {
+    "name": "hcaprint.cgap.sanger.ac.uk",
+    "ipv4addr": "172.27.81.76"
+  }
+}
