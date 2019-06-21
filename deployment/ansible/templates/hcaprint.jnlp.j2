@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jnlp spec="1.0+" codebase="{{ codebase_url }}" href="{{ jnlp_href }}">
+    <information>
+        <title>HCA Print Tool</title>
+        <vendor>Genome Research Limited</vendor>
+    </information>
+    <resources>
+        <j2se version="{{ java_version }}+" href="http://java.sun.com/products/autodl/j2se"/>
+        <jar href="{{ deployed_jar_name }}" main="true"/>
+    </resources>
+    <security>
+        <all-permissions/>
+    </security>
+    <application-desc
+            name="HCA Print Tool"
+            main-class="uk.ac.sanger.hcaprint.Main"
+            width="1200"
+            height="700">
+    </application-desc>
+    <update check="always" policy="always"/>
+</jnlp>

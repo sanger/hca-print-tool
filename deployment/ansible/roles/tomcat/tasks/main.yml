@@ -1,0 +1,115 @@
+- name: Make tomcat folder
+  file:
+    path: "{{ tomcat_dir }}"
+    state: directory
+
+- name: Create tomcat group
+  group:
+    name: "{{ file_group }}"
+
+- name: Create tomcat user
+  user:
+    name: "{{ file_owner }}"
+    shell: /bin/false
+    groups: "{{ file_group }}"
+    home: "{{ tomcat_dir }}"
+
+- name: Check if tomcat is installed already
+  stat:
+    path: "{{ tomcat_dir }}/bin"
+  register:
+    tomcat_stat_result
+
+- name: Download tomcat
+  get_url:
+    url: https://archive.apache.org/dist/tomcat/tomcat-8/v{{ tomcat_version }}/bin/{{tomcat_archive}}
+    dest: /tmp/{{ tomcat_archive }}
+    checksum: "{{ tomcat_checksum }}"
+  when: not tomcat_stat_result.stat.exists
+
+- name: Unpack tomcat
+  unarchive:
+    remote_src: yes
+    src: /tmp/{{ tomcat_archive }}
+    dest: "{{ tomcat_dir }}"
+    extra_opts:
+      - --strip-components=1
+  when: not tomcat_stat_result.stat.exists
+
+- name: Delete tomcat archive
+  file:
+    path: /tmp/{{ tomcat_archive }}
+    state: absent
+
+- name: chgrp tomcat
+  file:
+    path: "{{ tomcat_dir }}"
+    group: "{{ file_group }}"
+    recurse: yes
+
+- name: group readable conf
+  file:
+    path: "{{ tomcat_dir }}/conf"
+    recurse: yes
+    mode: g+r
+
+- name: group executable conf
+  file:
+    path: "{{ tomcat_dir }}/conf"
+    mode: g+x
+
+- name: owner of tomcat subfolders
+  file:
+    path: "{{ tomcat_dir }}/{{item}}"
+    owner: "{{ file_owner }}"
+    recurse: yes
+  with_items:
+    - webapps
+    - work
+    - temp
+    - logs
+
+- name: find JAVA_HOME
+  shell: update-java-alternatives -l | awk '{print $NF}'
+  register:
+    java_info
+
+- set_fact:
+    java_home: "{{ java_info.stdout }}/jre"
+
+- debug:
+    msg: "java_home = {{ java_home }}"
+
+- name: add tomcat service
+  template:
+    src: templates/tomcat.service.j2
+    dest: /etc/systemd/system/tomcat.service
+
+- name: adjust firewall
+  ufw:
+    rule: allow
+    port: "8080"
+
+- name: add tomcat user
+  lineinfile:
+    path: "{{ tomcat_dir }}/conf/tomcat-users.xml"
+    regexp: '^\s*<user username="tomcat".+admin-gui'
+    line: '  <user username="tomcat" password="{{vault_tomcat_password}}" roles="manager-gui,admin-gui,manager-script"/>'
+    insertbefore: '</tomcat-users>'
+
+- name: remove ip restriction in context.xml
+  replace:
+    path: "{{ tomcat_dir }}/webapps/{{ item }}/META-INF/context.xml"
+    regexp: '^(\s*)(<Valve.+RemoteAddrValve.+\n?.+allow=.+/>)\s*$'
+    replace: '\1 <!-- \2 -->'
+  with_items:
+    - manager
+    - host-manager
+
+- name: remove unnecessary webapps
+  file:
+    path: "{{ tomcat_dir }}/webapps/{{ item }}"
+    state: absent
+  with_items:
+    - examples
+    - docs

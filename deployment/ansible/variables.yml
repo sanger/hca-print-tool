@@ -1,0 +1,3 @@
+tomcat_dir: /opt/tomcat
+file_owner: tomcat
+file_group: tomcat

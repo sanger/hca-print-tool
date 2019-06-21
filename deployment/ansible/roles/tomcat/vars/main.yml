@@ -1,0 +1,3 @@
+tomcat_version: 8.5.42
+tomcat_archive: "apache-tomcat-{{tomcat_version}}.tar.gz"
+tomcat_checksum: 'sha512:3e6b38e48d315d142e96f8e3809c86632f3c3903f8751c6602581a587edf840893ff0c737a65fcf9560a495b0118b5b8d60d4d1ce7947fe2abe34a89839b640f'

@@ -1,0 +1,3 @@
+java_version: '1.8'
+deployed_jar_name: hcaprint.jar
+host_ws_dir: /hcaprint

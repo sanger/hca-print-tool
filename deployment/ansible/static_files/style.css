@@ -1,0 +1,23 @@
+body {
+  font-family: Tahoma, Verdana, sans-serif;
+  margin: 25px 50px;
+  background-repeat: no-repeat;
+  background-image: linear-gradient(#808080, white);
+}
+
+h1,h2 { color: #400080; }
+
+h2 {
+  font-size: 120%;
+  margin-top: 40px;
+}
+
+ul { list-style-type: square; }
+li { margin: 10px 0; }
+
+.centre-parent { text-align: center; }
+
+.centre-child {
+  display: inline-block;
+  text-align: left;
+}

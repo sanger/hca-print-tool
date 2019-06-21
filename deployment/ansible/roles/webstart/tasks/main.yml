@@ -1,0 +1,35 @@
+- name: template facts
+  set_fact:
+    codebase_url: http://{{ inventory_hostname }}:8080/hcaprint/
+    jnlp_href: http://{{ inventory_hostname }}:8080/hcaprint/hcaprint.jnlp
+
+- name: create webstart folder
+  file:
+    path: "{{ host_ws_dir }}"
+    state: directory
+    group: "{{ file_group }}"
+
+- name: copy templated files
+  template:
+    src: templates/{{ item }}.j2
+    dest: "{{ host_ws_dir }}/{{ item }}"
+    group: "{{ file_group }}"
+  with_items:
+    - hcaprint.jnlp
+    - index.html
+
+- name: copy static files
+  copy:
+    src: static_files/{{ item }}
+    dest: "{{ host_ws_dir }}/{{ item }}"
+    group: "{{ file_group }}"
+  with_items:
+    - deployJava.js
+    - style.css
+
+- name: set owner on webstart folder
+  file:
+    path: "{{ host_ws_dir }}"
+    recurse: yes
+    owner: "{{ file_owner }}"
+    group: "{{ file_group }}"

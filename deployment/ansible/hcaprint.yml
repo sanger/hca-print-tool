@@ -1,0 +1,47 @@
+---
+- name: Fix hosts
+  hosts: hcaprint
+  tasks:
+    - lineinfile:
+        path: /etc/hosts
+        regexp: 'cgap-prod-hcaprint-instance'
+        line: '127.0.0.1 cgap-prod-hcaprint-instance'
+        insertafter: 'localhost\n'
+  become: yes
+
+- name: Install JDK
+  hosts: hcaprint
+  tasks:
+    - apt:
+        name: default-jdk
+  become: yes
+
+- name: Install tomcat
+  hosts: hcaprint
+  vars_files:
+    - variables.yml
+    - passwords.yml
+  tasks:
+    - include_role:
+        name: tomcat
+  become: yes
+
+- name: Copy webstart files
+  hosts: hcaprint
+  vars_files:
+    - variables.yml
+  tasks:
+    - include_role:
+        name: webstart
+  become: yes
+
+- name: Restart tomcat service
+  hosts: hcaprint
+  tasks:
+    - systemd:
+        daemon_reload: yes
+        name: tomcat
+        state: restarted
+        enabled: yes
+  tags: config
+  become: yes
