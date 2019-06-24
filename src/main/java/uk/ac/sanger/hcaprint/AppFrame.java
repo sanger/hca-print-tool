@@ -20,6 +20,7 @@ public class AppFrame extends JFrame {
     private JScrollPane scrollPane;
     private JSpinner firstIndexField, lastIndexField;
     private JButton pasteButton;
+    private JButton clearButton;
     private JComboBox<String> printerCombo;
     private JButton printButton;
     private Properties config;
@@ -53,6 +54,9 @@ public class AppFrame extends JFrame {
         printButton.setEnabled(false);
         pasteButton = new JButton("Paste");
         pasteButton.addActionListener(e -> performPaste());
+        clearButton = new JButton("Clear");
+        clearButton.addActionListener(e -> performClear());
+        clearButton.setVisible(false);
 
         String[] printers = Arrays.stream(config.getProperty("printers", "").split(","))
                 .map(String::trim)
@@ -76,6 +80,7 @@ public class AppFrame extends JFrame {
         Box printerPanel = Box.createHorizontalBox();
         printerPanel.add(Box.createHorizontalGlue());
         printerPanel.add(pasteButton);
+        printerPanel.add(clearButton);
         printerPanel.add(Box.createHorizontalStrut(20));
         printerPanel.add(new JLabel("Printer:"));
         printerPanel.add(printerCombo);
@@ -273,6 +278,16 @@ public class AppFrame extends JFrame {
         updateSpinnerMax(firstIndexField, rows.size());
         updateSpinnerMax(lastIndexField, rows.size());
         rangeChanged();
+        boolean gotRows = !rows.isEmpty();
+        clearButton.setVisible(gotRows);
+        pasteButton.setVisible(!gotRows);
+    }
+
+    private void performClear() {
+        tableModel.setItems(Collections.emptyList());
+        rangeChanged();
+        clearButton.setVisible(false);
+        pasteButton.setVisible(true);
     }
 
     /**
