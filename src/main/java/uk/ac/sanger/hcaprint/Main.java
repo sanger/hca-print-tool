@@ -2,6 +2,8 @@ package uk.ac.sanger.hcaprint;
 
 import javax.swing.*;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Properties;
 
 /**
@@ -15,7 +17,8 @@ public class Main {
      */
     public static void main(String[] args) {
         final Properties props = loadProperties("config.properties");
-        if (props==null) {
+        final String template = loadFileContents("template.json");
+        if (props==null || template==null) {
             return;
         }
         for (String arg : args) {
@@ -29,7 +32,7 @@ public class Main {
         System.setProperty("apple.laf.useScreenMenuBar", "true");
         System.setProperty("apple.awt.application.name", props.getProperty("app_title", "HCA Print Tool"));
         SwingUtilities.invokeLater(() -> {
-            AppFrame frame = new AppFrame(props);
+            AppFrame frame = new AppFrame(props, template);
             frame.setBounds(100, 100, 500, 500);
             frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
             frame.setVisible(true);
@@ -49,6 +52,20 @@ public class Main {
                 Properties props = new Properties();
                 props.load(url.openStream());
                 return props;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        JOptionPane.showMessageDialog(null, "Could not load file", "Error",
+                JOptionPane.ERROR_MESSAGE);
+        return null;
+    }
+
+    private static String loadFileContents(String filename) {
+        try {
+            URL url = Main.class.getClassLoader().getResource("template.json");
+            if (url != null) {
+                return new String(Files.readAllBytes(Paths.get(url.toURI())));
             }
         } catch (Exception e) {
             e.printStackTrace();

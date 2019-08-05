@@ -1,7 +1,5 @@
 package uk.ac.sanger.hcaprint;
 
-import uk.ac.sanger.hcaprint.PrintRequest.Field;
-
 import javax.swing.*;
 import javax.swing.table.*;
 import java.awt.BorderLayout;
@@ -15,6 +13,10 @@ import java.util.stream.*;
  * @author dr6
  */
 public class AppFrame extends JFrame {
+    enum Field {
+        NAME, BARCODE, DATE
+    }
+
     private JTable table;
     private FunctionalTableModel<LabelData> tableModel;
     private JScrollPane scrollPane;
@@ -24,14 +26,16 @@ public class AppFrame extends JFrame {
     private JComboBox<String> printerCombo;
     private JButton printButton;
     private Properties config;
+    private String template;
 
     /**
      * Constructs an AppFrame using the given config.
-     * The config keys should include "printers", "pmb_url" and (optionally) "proxy".
+     * The config keys should include "printers", "print_service" and (optionally) "proxy".
      */
-    public AppFrame(Properties config) {
+    public AppFrame(Properties config, String template) {
         super(config.getProperty("app_title", "Print tool"));
         this.config = config;
+        this.template = template;
 
         initComponents();
         layOutComponents();
@@ -139,13 +143,14 @@ public class AppFrame extends JFrame {
     }
 
     private Set<Field> findEnabledFields() {
-        Set<Field> fields = EnumSet.noneOf(Field.class);
-        for (Field field : Field.values()) {
-            if (!config.getProperty(field.propertyName(), "").trim().isEmpty()) {
-                fields.add(field);
-            }
+        String propValue = config.getProperty("fields", "");
+        if (propValue.isEmpty()) {
+            return Collections.emptySet();
         }
-        return fields;
+        return Arrays.stream(propValue.replace(',',' ').split("\\s+"))
+                .filter(s -> !s.isEmpty())
+                .map(s -> Field.valueOf(s.toUpperCase()))
+                .collect(Collectors.toCollection(() -> EnumSet.noneOf(Field.class)));
     }
 
     private FunctionalTableModel<LabelData> createTableModel(Set<Field> enabledFields) {
@@ -326,26 +331,17 @@ public class AppFrame extends JFrame {
     /**
      * The behaviour of the print button.
      * This reads some values from the application's config, creates a
-     * {@link PrintRequest} and posts it using {@link PMBClient}.
+     * {@link PrintRequest} and posts it using {@link SPrintClient}.
      * In the event of an error (missing/invalid config, failed post request),
      * an error message will be shown to the user.
      * If the post succeeds, a success message will be shown.
      */
     private void performPrint() {
         printButton.setEnabled(false);
-        String location = config.getProperty("pmb_url", "").trim();
+        String location = config.getProperty("print_service", "").trim();
         String proxy = config.getProperty("proxy");
-        String templateString = config.getProperty("template_id", "").trim();
-        if (location.isEmpty() || templateString.isEmpty()) {
-            showError("Missing config for PrintMyBarcode location.");
-            return;
-        }
-
-        int templateId;
-        try {
-            templateId = Integer.parseInt(templateString);
-        } catch (NumberFormatException e) {
-            showError("Invalid template id: "+templateString);
+        if (location.isEmpty()) {
+            showError("Missing config for print service location.");
             return;
         }
 
@@ -355,12 +351,12 @@ public class AppFrame extends JFrame {
             return;
         }
 
-        PrintRequest request = new PrintRequest(values, (String) printerCombo.getSelectedItem(), templateId, config);
+        PrintRequest request = new PrintRequest(template, values, (String) printerCombo.getSelectedItem());
 
-        PMBClient pmb = new PMBClient(location, proxy);
+        SPrintClient client = new SPrintClient(location, proxy);
 
         try {
-            pmb.print(request);
+            client.print(request);
         } catch (Exception e) {
             e.printStackTrace();
             showError("There was an error when trying to print: "+e);

@@ -4,33 +4,28 @@ import java.io.*;
 import java.net.*;
 
 /**
- * A tool for sending print requests to PrintMyBarcode.
+ * Http client class for sending post requests.
  * @author dr6
  */
-public class PMBClient {
-    private String location;
+public class HttpClient {
     private Proxy proxy;
 
-    /**
-     * Constructs a client for sending print requests to the given location.
-     * @param location the location where PMB will receive print requests
-     * @param proxyString optional proxy string in format {@code "location:port"}
-     */
-    public PMBClient(String location, String proxyString) {
-        this.location = location;
-        this.proxy = getProxy(proxyString);
+    protected void setProxy(String proxy) {
+        setProxy(toProxy(proxy));
+    }
+
+    protected void setProxy(Proxy proxy) {
+        this.proxy = proxy;
     }
 
     /**
-     * Gets a {@code Proxy} object based on the given string.
-     * If the string is null or has no content, null is returned.
-     * If given, the string should be of the form {@code "location:port"}.
-     * If it cannot be understood, a message will be output to {@code System.err},
-     * and then null will be returned.
-     * @param proxyString the string describing the proxy, or null (or a blank string) if no proxy is required
-     * @return a proxy, or null
+     * Creates an instance of {@code Proxy} based on the given string.
+     * The string should be an address and a port number, separated by a colon.
+     * If the string is invalid (or null), this method will return null.
+     * @param proxyString the string describing the proxy
+     * @return a new proxy, or null if the given string is invalid
      */
-    private static Proxy getProxy(String proxyString) {
+    protected static Proxy toProxy(String proxyString) {
         if (proxyString==null) {
             return null;
         }
@@ -55,27 +50,13 @@ public class PMBClient {
     }
 
     /**
-     * Sends a print request
-     * @param request the print request to send
-     * @exception IOException there was a problem sending the print request
-     */
-    public void print(PrintRequest request) throws IOException {
-        HttpURLConnection connection = openConnection();
-        try {
-            post(request, connection);
-        } finally {
-            connection.disconnect();
-        }
-    }
-
-    /**
-     * Post the given request over the given connection.
+     * Posts the given request over the given connection.
      * @param request the request to send
      * @param connection an open connection
      * @exception IOException there was a problem sending the print request, or if
      *            the response code was not in the 2## range.
      */
-    private void post(PrintRequest request, HttpURLConnection connection) throws IOException {
+    protected void post(Object request, HttpURLConnection connection) throws IOException {
         connection.setRequestMethod("POST");
         connection.setDoOutput(true);
         connection.setRequestProperty("Content-Type", "application/json");
@@ -86,10 +67,10 @@ public class PMBClient {
             out.flush();
             int responseCode = connection.getResponseCode();
             if (responseCode == HttpURLConnection.HTTP_NOT_FOUND) {
-                throw new IOException("PrintMyBarcode could not be reached.");
+                throw new IOException("Print service could not be reached.");
             }
             if (responseCode < 200 || responseCode >= 300) {
-                throw new IOException("Unexpected response code from PrintMyBarcode: "+responseCode
+                throw new IOException("Unexpected response code from print service: "+responseCode
                         + "\n" + getResponseString(connection.getErrorStream()));
             }
         }
@@ -97,14 +78,16 @@ public class PMBClient {
 
     /**
      * Reads from an {@code InputStream} line by line, concatenates the lines and returns the result.
+     * Returns null if the given {@code InputStream} is null.
      * @param is stream to read
      * @return the text read from the input stream
      * @exception IOException there was a communication problem
      */
-    private static String getResponseString(InputStream is) throws IOException {
+    protected static String getResponseString(InputStream is) throws IOException {
         if (is==null) {
             return null;
         }
+
         try (BufferedReader in = new BufferedReader(new InputStreamReader(is))) {
             StringBuilder sb = new StringBuilder();
             String line;
@@ -121,8 +104,8 @@ public class PMBClient {
      * @return an open {@code HttpURLConnection}.
      * @exception IOException there was a problem opening the connection
      */
-    private HttpURLConnection openConnection() throws IOException {
-        URL url = new URL(this.location);
+    protected HttpURLConnection openConnection(String location) throws IOException {
+        URL url = new URL(location);
         URLConnection con;
         if (proxy==null) {
             con = url.openConnection();
