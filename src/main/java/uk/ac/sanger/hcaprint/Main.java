@@ -2,9 +2,8 @@ package uk.ac.sanger.hcaprint;
 
 import javax.swing.*;
 import java.net.URL;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.Properties;
+import java.util.Scanner;
 
 /**
  * Main entry point for the application.
@@ -56,16 +55,20 @@ public class Main {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        JOptionPane.showMessageDialog(null, "Could not load file", "Error",
+        JOptionPane.showMessageDialog(null, "Could not load file "+filename, "Error",
                 JOptionPane.ERROR_MESSAGE);
         return null;
     }
 
     private static String loadFileContents(String filename) {
         try {
-            URL url = Main.class.getClassLoader().getResource("template.json");
+            URL url = Main.class.getClassLoader().getResource(filename);
             if (url != null) {
-                return new String(Files.readAllBytes(Paths.get(url.toURI())));
+                Scanner scanner = new Scanner(url.openStream(), "UTF-8");
+                scanner.useDelimiter("\\A");
+                if (scanner.hasNext()) {
+                    return scanner.next();
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();

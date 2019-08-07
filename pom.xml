@@ -6,7 +6,7 @@
 
     <groupId>uk.ac.sanger.hcaprint</groupId>
     <artifactId>hcaprint</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>2.0</version>
 
     <build>
         <plugins>
@@ -17,9 +17,6 @@
                     <source>1.8</source>
                     <target>1.8</target>
                     <encoding>UTF-8</encoding>
-                    <compilerArgs>
-                        <arg>-Xplugin:Manifold strings exceptions</arg>
-                    </compilerArgs>
                 </configuration>
             </plugin>
             <plugin>
@@ -51,26 +48,6 @@
         </plugins>
     </build>
 
-    <profiles>
-        <profile>
-            <id>internal.tools-jar</id>
-            <activation>
-                <file>
-                    <exists>/Library/Java/JavaVirtualMachines/jdk1.8.0_161.jdk/Contents/Home/lib/tools.jar</exists>
-                </file>
-            </activation>
-            <dependencies>
-                <dependency>
-                    <groupId>com.sun</groupId>
-                    <artifactId>tools</artifactId>
-                    <version>1.8.0</version>
-                    <scope>system</scope>
-                    <systemPath>/Library/Java/JavaVirtualMachines/jdk1.8.0_161.jdk/Contents/Home/lib/tools.jar</systemPath>
-                </dependency>
-            </dependencies>
-        </profile>
-    </profiles>
-
     <dependencies>
         <dependency>
             <groupId>javax.json</groupId>
@@ -82,12 +59,6 @@
             <groupId>org.glassfish</groupId>
             <artifactId>javax.json</artifactId>
             <version>1.1.2</version>
-        </dependency>
-
-        <dependency>
-            <groupId>systems.manifold</groupId>
-            <artifactId>manifold-all</artifactId>
-            <version>2019.1.10</version>
         </dependency>
     </dependencies>
 
