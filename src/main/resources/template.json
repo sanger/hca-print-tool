@@ -2,13 +2,13 @@
    "textFields":[
       {
          "x":1,
-         "y":4,
+         "y":3,
          "fontSize":2.5,
          "value":"{name}"
       },
       {
-         "x":13,
-         "y":10,
+         "x":11,
+         "y":9,
          "fontSize":2.5,
          "value":"{date}"
       }
@@ -16,9 +16,9 @@
    "barcodeFields":[
       {
          "x":3,
-         "y":5,
+         "y":4,
          "barcodeType":"datamatrix",
-         "cellWidth":0.3,
+         "cellWidth":0.25,
          "value":"{barcode}"
       }
    ]
