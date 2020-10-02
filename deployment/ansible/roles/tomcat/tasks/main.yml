@@ -75,7 +75,7 @@
     java_info
 
 - set_fact:
-    java_home: "{{ java_info.stdout }}/jre"
+    java_home: "{{ java_info.stdout }}"
 
 - debug:
     msg: "java_home = {{ java_home }}"
