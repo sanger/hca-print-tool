@@ -13,7 +13,7 @@
   hosts: hcaprint
   tasks:
     - apt:
-        name: default-jdk
+        name: openjdk-8-jre-headless
   become: yes
 
 - name: Install tomcat

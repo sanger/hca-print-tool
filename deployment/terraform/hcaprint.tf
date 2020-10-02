@@ -7,14 +7,14 @@ variable "keypair" {
   default = "cgapprodkeypair"
 }
 variable "instance_image_id" {
-  default = "c5c6a324-8aa7-409f-a658-8ee3c897620f"
+  default = "19c3fc18-a9b2-497b-a6a9-875ca2d71340"
 }
 
 provider "openstack" {
   user_name   = "${var.user_name}"
   tenant_name = "${var.tenant_name}"
   password    = "${var.password}"
-  auth_url    = "https://eta.internal.sanger.ac.uk:13000"
+  auth_url    = "https://theta.internal.sanger.ac.uk:5000"
   domain_name = "Default"
 }
 
@@ -26,7 +26,7 @@ resource "openstack_networking_network_v2" "cgap_prod_hcaprint_network" {
 resource "openstack_networking_router_v2" "cgap_prod_hcaprint_router" {
   name = "cgap_prod_hcaprint_router"
   admin_state_up = "true"
-  external_network_id = "eb31cc74-96ba-4394-aef4-0e94bec46d85" # public
+  external_network_id = "79b16847-fb29-4870-9f18-0b06d6c2af70" # public
 }
 
 resource "openstack_networking_subnet_v2" "cgap_prod_hcaprint_subnet" {
@@ -80,6 +80,6 @@ resource "openstack_compute_instance_v2" "cgap_prod_hcaprint_instance" {
 }
 
 resource "openstack_compute_floatingip_associate_v2" "cgap_prod_hcaprint_floating_ip_assoc" {
-  floating_ip = "172.27.81.76"
+  floating_ip = "172.27.17.203"
   instance_id = "${openstack_compute_instance_v2.cgap_prod_hcaprint_instance.id}"
 }
